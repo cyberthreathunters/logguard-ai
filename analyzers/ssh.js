@@ -9,6 +9,12 @@ function hourOf(event) {
   return isNaN(date) ? null : date.getUTCHours();
 }
 
+function isSuspiciousHour(hour, start, end) {
+  if (hour === null || start === end) return false;
+  if (start < end) return hour >= start && hour < end;   // e.g. 0-6, doesn't cross midnight
+  return hour >= start || hour < end;                     // e.g. 22-6, crosses midnight
+}
+
 export function analyze(events, config) {
   const threshold = config.bruteforce_threshold ?? 5;
   const { start = 0, end = 6 } = config.suspicious_hours ?? {};
@@ -34,7 +40,7 @@ export function analyze(events, config) {
 
     if (isSuccessLogon) {
       const hour = hourOf(e);
-      if (hour !== null && (hour >= start || hour < end)) {
+      if (isSuspiciousHour(hour, start, end)) {
         alerts.push({
           type: "suspicious_hour_login",
           severity: "medium",
