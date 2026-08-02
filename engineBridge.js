@@ -6,7 +6,7 @@ import * as web from "./analyzers/web.js";
 import * as system from "./analyzers/system.js";
 import * as ml from "./analyzers/ml.js";
 
-const DEFAULT_CONFIG = {
+export const DEFAULT_CONFIG = {
   ssh: { bruteforce_threshold: 5, suspicious_hours: { start: 0, end: 6 } },
   firewall: { portscan_threshold: 10, large_outbound_threshold: 1_000_000 },
   ids: { enabled: true },
