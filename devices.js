@@ -1,6 +1,7 @@
 import express from "express";
 import { db, generateDeviceToken, generateInstallCode } from "./database.js";
-import { runAnalyzers } from "./engineBridge.js";
+import { runAnalyzers, DEFAULT_CONFIG } from "./engineBridge.js";
+import { recordFailure } from "./bruteforceTracker.js";
 
 export const router = express.Router();
 
@@ -51,7 +52,11 @@ router.post("/devices/events", verifyDevice, (req, res) => {
 
   db.prepare("UPDATE devices SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?").run(device.id);
 
-  const alertsByType = runAnalyzers(events || []);
+  const config = {
+    ...DEFAULT_CONFIG,
+    ssh: { ...DEFAULT_CONFIG.ssh, tracker: { recordFailure }, deviceId: device.id },
+  };
+  const alertsByType = runAnalyzers(events || [], config);
 
   const insertAlert = db.prepare(
     "INSERT INTO alerts (device_id, type, severity, detail) VALUES (?, ?, ?, ?)"
