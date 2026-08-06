@@ -10,7 +10,10 @@ import { router as devicesRouter } from "./devices.js";
 import { initDb } from "./database.js";
 
 const app = express();
-app.use(cors({ origin: "*" }));
+// FRONTEND_URL restricts CORS to your real dashboard once deployed.
+// Falls back to "*" (open) if unset, so this still works before you have
+// a Vercel URL yet - set FRONTEND_URL on Render once you do.
+app.use(cors({ origin: process.env.FRONTEND_URL || "*" }));
 app.use(express.json());
 
 app.get("/", (req, res) => {
