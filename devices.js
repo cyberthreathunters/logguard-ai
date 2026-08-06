@@ -101,8 +101,14 @@ router.post("/devices/install-code", verifyToken, async (req, res) => {
   res.json({ install_code: code });
 });
 
+// ---------------- LIST DEVICES ----------------
+router.get("/devices", verifyToken, async (req, res) => {
+  const result = await db.execute("SELECT id, hostname, enrolled_at, last_seen_at FROM devices ORDER BY id");
+  res.json({ devices: result.rows });
+});
+
 // ---------------- LIST ALERTS ----------------
-router.get("/devices/:id/alerts", async (req, res) => {
+router.get("/devices/:id/alerts", verifyToken, async (req, res) => {
   const result = await db.execute({
     sql: "SELECT * FROM alerts WHERE device_id = ? ORDER BY created_at DESC",
     args: [req.params.id],

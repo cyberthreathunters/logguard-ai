@@ -1,0 +1,281 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #FBF4F2;
+  --panel: #FFFFFF;
+  --ink: #241412;
+  --ink-soft: #8A7E7C;
+  --ink-faint: #C9C1C2;
+
+  --void: #2E1A17;
+  --void-soft: #3B2624;
+
+  --brand: #DD7B6E;
+  --brand-dim: #884E45;
+  --secondary: #94605A;
+  --soft-pink: #F0C2BB;
+
+  --critical: #B23A2E;
+  --high: #DD7B6E;
+  --medium: #C9A227;
+  --line: #E9D4CF;
+
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+.dot { color: var(--brand); }
+
+/* ---------- Login ---------- */
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--void);
+}
+
+.login-card {
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 40px;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5);
+}
+
+.login-logo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  margin-bottom: 4px;
+}
+
+.login-sub {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  margin: 0 0 16px;
+}
+
+.login-card label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 10px;
+  color: var(--ink-soft);
+}
+
+.login-card input {
+  padding: 10px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  font-size: 0.95rem;
+  margin-top: 4px;
+}
+
+.login-card input:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+.login-card button {
+  margin-top: 20px;
+  padding: 11px;
+  border-radius: 4px;
+  border: none;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.login-card button:hover { background: var(--brand-dim); }
+.login-card button:disabled { opacity: 0.6; cursor: default; }
+
+.login-error {
+  color: var(--critical);
+  font-size: 0.82rem;
+  margin-top: 10px;
+}
+
+/* ---------- Dashboard shell ---------- */
+.dashboard {
+  min-height: 100vh;
+}
+
+.dash-header {
+  background: var(--void);
+  color: #fff;
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dash-header .logo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.dash-header-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.last-updated {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+}
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  padding: 7px 14px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.logout-btn:hover { border-color: #fff; }
+
+.dash-body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: calc(100vh - 60px);
+}
+
+/* ---------- Device list ---------- */
+.device-list {
+  border-right: 1px solid var(--line);
+  padding: 20px;
+}
+
+.device-list h3 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  margin: 0 0 12px;
+}
+
+.device-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  cursor: pointer;
+}
+
+.device-item:hover { background: var(--soft-pink); background: rgba(240,194,187,0.25); }
+.device-item.active { background: rgba(221,123,110,0.15); border-color: var(--brand); }
+
+.device-host { font-weight: 600; font-size: 0.92rem; }
+.device-seen { font-size: 0.75rem; color: var(--ink-soft); margin-top: 2px; }
+
+/* ---------- Alert panel ---------- */
+.alert-panel { padding: 24px 32px; }
+
+.stat-row { display: flex; gap: 10px; margin-bottom: 20px; }
+
+.stat-chip {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.stat-chip.critical { color: var(--critical); }
+.stat-chip.high { color: var(--brand-dim); }
+.stat-chip.medium { color: #96751B; }
+
+.empty-note {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  padding: 24px 0;
+}
+
+.banner-error {
+  background: #FBEAE7;
+  color: var(--critical);
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+.alert-list { display: flex; flex-direction: column; gap: 10px; }
+
+.alert-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line);
+  border-radius: 6px;
+  padding: 14px 18px;
+}
+.alert-card.sev-critical { border-left-color: var(--critical); }
+.alert-card.sev-high { border-left-color: var(--brand); }
+.alert-card.sev-medium { border-left-color: var(--medium); }
+
+.alert-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.sev-badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.04em;
+}
+.sev-badge.sev-critical { background: #FBEAE7; color: var(--critical); }
+.sev-badge.sev-high { background: rgba(221,123,110,0.18); color: var(--brand-dim); }
+.sev-badge.sev-medium { background: rgba(201,162,39,0.18); color: #7A611A; }
+.sev-badge.sev-info { background: #EFEFEF; color: var(--ink-soft); }
+
+.alert-type {
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: capitalize;
+}
+
+.alert-time {
+  margin-left: auto;
+  font-size: 0.76rem;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+}
+
+.alert-detail {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 760px) {
+  .dash-body { grid-template-columns: 1fr; }
+  .device-list { border-right: none; border-bottom: 1px solid var(--line); }
+}

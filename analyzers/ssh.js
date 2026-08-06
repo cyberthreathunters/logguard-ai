@@ -37,6 +37,24 @@ export function analyze(events, config) {
     const isSuccessLogon = e.event_id === 4624 || /accepted password/i.test(e.raw);
 
     if (isFailedLogon) {
+      // LogonType 10 = RemoteInteractive (RDP), 3 = Network. Both represent
+      // an attempt that didn't originate from someone physically at the
+      // keyboard - worth flagging on its own, not just when it crosses the
+      // brute-force threshold, since a single unexpected RDP attempt can
+      // matter even alone (e.g. RDP shouldn't be internet-exposed at all
+      // on most laptops).
+      if (e.logon_type === 10 || e.logon_type === 3) {
+        alerts.push({
+          type: "remote_logon_attempt",
+          severity: "medium",
+          account: e.account ?? null,
+          src_ip: e.src_ip ?? null,
+          logon_type: e.logon_type,
+          timestamp: e.timestamp ?? null,
+          raw: e.raw,
+        });
+      }
+
       const ts = e.timestamp ? Date.parse(e.timestamp) : Date.now();
 
       if (tracker) {
