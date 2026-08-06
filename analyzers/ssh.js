@@ -82,8 +82,10 @@ export function analyze(events, config) {
     }
 
     if (isSuccessLogon) {
+      const isSystemAccount =
+        e.account && (e.account.toUpperCase() === "SYSTEM" || e.account.endsWith("$"));
       const hour = hourOf(e);
-      if (isSuspiciousHour(hour, start, end)) {
+      if (!isSystemAccount && isSuspiciousHour(hour, start, end)) {
         alerts.push({
           type: "suspicious_hour_login",
           severity: "medium",
