@@ -7,6 +7,7 @@ import {
 } from "./auth.js";
 import { verifyToken } from "./security.js";
 import { router as devicesRouter } from "./devices.js";
+import { initDb } from "./database.js";
 
 const app = express();
 app.use(cors({ origin: "*" }));
@@ -17,9 +18,9 @@ app.get("/", (req, res) => {
 });
 
 // ---------------- LOGIN / REGISTER ----------------
-app.post("/login", (req, res) => {
+app.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  const user = authenticateUser(email, password);
+  const user = await authenticateUser(email, password);
 
   if (!user) return res.json({ error: "invalid credentials" });
 
@@ -27,15 +28,14 @@ app.post("/login", (req, res) => {
   res.json({ access_token: token });
 });
 
-app.post("/register", (req, res) => {
+app.post("/register", async (req, res) => {
   const { email, password } = req.body;
-  const success = registerUser(email, password);
+  const success = await registerUser(email, password);
 
   if (!success) return res.json({ error: "User already exists" });
   res.json({ message: "User registered successfully" });
 });
 
-// Example of a human-authenticated route, if you need one later:
 app.get("/me", verifyToken, (req, res) => {
   res.json({ email: req.user });
 });
@@ -43,6 +43,9 @@ app.get("/me", verifyToken, (req, res) => {
 app.use(devicesRouter);
 
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-  console.log(`LogGuard API listening on port ${PORT}`);
+
+initDb().then(() => {
+  app.listen(PORT, () => {
+    console.log(`LogGuard API listening on port ${PORT}`);
+  });
 });
