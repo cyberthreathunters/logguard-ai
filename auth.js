@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { db } from "./database.js";
 
-// Left exactly as-is per your instruction - same env var name/fallback pattern.
 const SECRET_KEY = process.env.JWT_SECRET_KEY || "change-me-in-production";
 const ALGORITHM = "HS256";
 const ACCESS_TOKEN_EXPIRE_MINUTES = 60;
@@ -15,19 +14,26 @@ export function verifyPassword(plain, hashed) {
   return bcrypt.compareSync(plain, hashed);
 }
 
-export function registerUser(email, password) {
-  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
-  if (existing) return false;
+export async function registerUser(email, password) {
+  const existing = await db.execute({
+    sql: "SELECT id FROM users WHERE email = ?",
+    args: [email],
+  });
+  if (existing.rows.length > 0) return false;
 
-  db.prepare("INSERT INTO users (email, password) VALUES (?, ?)").run(
-    email,
-    hashPassword(password)
-  );
+  await db.execute({
+    sql: "INSERT INTO users (email, password) VALUES (?, ?)",
+    args: [email, hashPassword(password)],
+  });
   return true;
 }
 
-export function authenticateUser(email, password) {
-  const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+export async function authenticateUser(email, password) {
+  const result = await db.execute({
+    sql: "SELECT * FROM users WHERE email = ?",
+    args: [email],
+  });
+  const user = result.rows[0];
   if (!user) return null;
   if (!verifyPassword(password, user.password)) return null;
   return user;
