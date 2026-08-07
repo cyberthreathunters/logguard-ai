@@ -11,7 +11,13 @@ function severityLabel(severity) {
 
 function timeAgo(isoString) {
   if (!isoString) return "";
-  const diffMs = Date.now() - new Date(isoString.replace(" ", "T") + "Z").getTime();
+  // DB timestamps look like "2026-08-06 12:34:56" (space, no zone).
+  // Full ISO strings (from `.toISOString()`) already have "T" and "Z" -
+  // only append them if they're missing, otherwise this double-adds "Z".
+  const normalized = isoString.includes("T")
+    ? isoString
+    : isoString.replace(" ", "T") + "Z";
+  const diffMs = Date.now() - new Date(normalized).getTime();
   const mins = Math.floor(diffMs / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
@@ -111,7 +117,12 @@ export default function Dashboard({ onLogout }) {
             <div className="stat-chip medium">{counts.medium || 0} medium</div>
           </div>
 
-          {error && <div className="banner-error">{error}</div>}
+          {error && (
+            <div className="banner-error">
+              Couldn't reach the server just now — this happens if the backend was
+              asleep (free-tier spin-down) and is waking back up. Retrying automatically.
+            </div>
+          )}
 
           {sortedAlerts.length === 0 && !error && (
             <div className="empty-note">No alerts yet for this device.</div>
