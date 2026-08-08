@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { login } from "../api.js";
 
-export default function Login({ onLoggedIn }) {
+export default function Login({ onLoggedIn, onGoToRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
@@ -51,6 +51,10 @@ export default function Login({ onLoggedIn }) {
 
         <button type="submit" disabled={loading}>
           {loading ? "Signing in..." : "Sign in"}
+        </button>
+
+        <button type="button" className="link-btn" onClick={onGoToRegister}>
+          Need an account? Register
         </button>
       </form>
     </div>
