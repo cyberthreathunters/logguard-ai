@@ -450,3 +450,7 @@ body {
   .log-row { grid-template-columns: 1fr; gap: 2px; }
   .log-row-head { display: none; }
 }
+
+.dash-body .logs-panel {
+  grid-column: 1 / -1;
+}
