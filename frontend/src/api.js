@@ -33,3 +33,16 @@ export function listDevices() {
 export function listAlerts(deviceId) {
   return request(`/devices/${deviceId}/alerts`);
 }
+
+// NEW: log search
+export function searchLogs(params) {
+  const query = new URLSearchParams(
+    Object.fromEntries(Object.entries(params).filter(([, v]) => v !== "" && v != null))
+  );
+  return request(`/logs/search?${query.toString()}`);
+}
+
+export function logStats(deviceId) {
+  const query = deviceId ? `?device_id=${deviceId}` : "";
+  return request(`/logs/stats${query}`);
+}
