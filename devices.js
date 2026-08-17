@@ -69,6 +69,25 @@ router.post("/devices/events", verifyDevice, async (req, res) => {
     args: [device.id],
   });
 
+  // NEW: store every raw event, not just the ones that trigger an alert.
+  // This is what search is built on - without this, only pre-detected
+  // patterns are ever visible, same limitation as before.
+  if (events && events.length > 0) {
+    const statements = events.map((e) => ({
+      sql: "INSERT INTO logs (device_id, type, event_id, account, src_ip, raw, event_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      args: [
+        device.id,
+        e.type || "unknown",
+        e.event_id ?? null,
+        e.account ?? null,
+        e.src_ip ?? null,
+        e.raw ?? "",
+        e.timestamp ?? null,
+      ],
+    }));
+    await db.batch(statements, "write");
+  }
+
   const config = {
     ...DEFAULT_CONFIG,
     ssh: { ...DEFAULT_CONFIG.ssh, tracker: { recordFailure }, deviceId: device.id },
@@ -95,7 +114,6 @@ router.post("/devices/events", verifyDevice, async (req, res) => {
 });
 
 // ---------------- INSTALL CODE ----------------
-// Now requires a logged-in admin (verifyToken) - was open to anyone before.
 router.post("/devices/install-code", verifyToken, async (req, res) => {
   const code = await generateInstallCode();
   res.json({ install_code: code });
