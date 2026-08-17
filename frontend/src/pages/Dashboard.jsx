@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { listDevices, listAlerts } from "../api.js";
+import Logs from "./Logs.jsx";
 
 const POLL_INTERVAL_MS = 8000;
 
@@ -11,9 +12,6 @@ function severityLabel(severity) {
 
 function timeAgo(isoString) {
   if (!isoString) return "";
-  // DB timestamps look like "2026-08-06 12:34:56" (space, no zone).
-  // Full ISO strings (from `.toISOString()`) already have "T" and "Z" -
-  // only append them if they're missing, otherwise this double-adds "Z".
   const normalized = isoString.includes("T")
     ? isoString
     : isoString.replace(" ", "T") + "Z";
@@ -26,22 +24,10 @@ function timeAgo(isoString) {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-export default function Dashboard({ onLogout }) {
-  const [devices, setDevices] = useState([]);
-  const [selectedDeviceId, setSelectedDeviceId] = useState(null);
+function AlertsView({ devices, selectedDeviceId }) {
   const [alerts, setAlerts] = useState([]);
   const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
   const pollRef = useRef(null);
-
-  useEffect(() => {
-    listDevices()
-      .then((data) => {
-        setDevices(data.devices);
-        if (data.devices.length > 0) setSelectedDeviceId(data.devices[0].id);
-      })
-      .catch((err) => setError(err.message));
-  }, []);
 
   useEffect(() => {
     if (!selectedDeviceId) return;
@@ -50,7 +36,6 @@ export default function Dashboard({ onLogout }) {
       try {
         const data = await listAlerts(selectedDeviceId);
         setAlerts(data.alerts);
-        setLastUpdated(new Date());
         setError(null);
       } catch (err) {
         setError(err.message);
@@ -73,6 +58,56 @@ export default function Dashboard({ onLogout }) {
     return acc;
   }, {});
 
+  return (
+    <main className="alert-panel">
+      <div className="stat-row">
+        <div className="stat-chip critical">{counts.critical || 0} critical</div>
+        <div className="stat-chip high">{counts.high || 0} high</div>
+        <div className="stat-chip medium">{counts.medium || 0} medium</div>
+      </div>
+
+      {error && <div className="banner-error">{error}</div>}
+
+      {sortedAlerts.length === 0 && !error && (
+        <div className="empty-note">No alerts yet for this device.</div>
+      )}
+
+      <div className="alert-list">
+        {sortedAlerts.map((a) => (
+          <div key={a.id} className={`alert-card sev-${a.severity || "info"}`}>
+            <div className="alert-top">
+              <span className={`sev-badge sev-${a.severity || "info"}`}>
+                {severityLabel(a.severity)}
+              </span>
+              <span className="alert-type">{a.type.replaceAll("_", " ")}</span>
+              <span className="alert-time">{timeAgo(a.created_at)}</span>
+            </div>
+            <div className="alert-detail">{a.detail.raw}</div>
+          </div>
+        ))}
+      </div>
+    </main>
+  );
+}
+
+export default function Dashboard({ onLogout }) {
+  const [devices, setDevices] = useState([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [view, setView] = useState("alerts"); // "alerts" | "logs"
+
+  useEffect(() => {
+    listDevices().then((data) => {
+      setDevices(data.devices);
+      if (data.devices.length > 0) setSelectedDeviceId(data.devices[0].id);
+    });
+  }, []);
+
+  useEffect(() => {
+    const t = setInterval(() => setLastUpdated(new Date()), POLL_INTERVAL_MS);
+    return () => clearInterval(t);
+  }, []);
+
   function handleLogout() {
     localStorage.removeItem("lg_token");
     onLogout();
@@ -84,65 +119,48 @@ export default function Dashboard({ onLogout }) {
         <div className="logo">
           LogGuard <span className="dot">AI</span>
         </div>
+        <nav className="view-tabs">
+          <button className={view === "alerts" ? "active" : ""} onClick={() => setView("alerts")}>
+            Alerts
+          </button>
+          <button className={view === "logs" ? "active" : ""} onClick={() => setView("logs")}>
+            Search Logs
+          </button>
+        </nav>
         <div className="dash-header-right">
-          {lastUpdated && (
-            <span className="last-updated">Updated {timeAgo(lastUpdated.toISOString())}</span>
-          )}
+          <span className="last-updated">Updated {timeAgo(lastUpdated.toISOString())}</span>
           <button className="logout-btn" onClick={handleLogout}>Sign out</button>
         </div>
       </header>
 
       <div className="dash-body">
-        <aside className="device-list">
-          <h3>Devices</h3>
-          {devices.length === 0 && <p className="empty-note">No devices enrolled yet</p>}
-          {devices.map((d) => (
-            <button
-              key={d.id}
-              className={`device-item ${d.id === selectedDeviceId ? "active" : ""}`}
-              onClick={() => setSelectedDeviceId(d.id)}
-            >
-              <div className="device-host">{d.hostname || `Device #${d.id}`}</div>
-              <div className="device-seen">
-                {d.last_seen_at ? `seen ${timeAgo(d.last_seen_at)}` : "never checked in"}
-              </div>
-            </button>
-          ))}
-        </aside>
+        {view === "alerts" && (
+          <>
+            <aside className="device-list">
+              <h3>Devices</h3>
+              {devices.length === 0 && <p className="empty-note">No devices enrolled yet</p>}
+              {devices.map((d) => (
+                <button
+                  key={d.id}
+                  className={`device-item ${d.id === selectedDeviceId ? "active" : ""}`}
+                  onClick={() => setSelectedDeviceId(d.id)}
+                >
+                  <div className="device-host">{d.hostname || `Device #${d.id}`}</div>
+                  <div className="device-seen">
+                    {d.last_seen_at ? `seen ${timeAgo(d.last_seen_at)}` : "never checked in"}
+                  </div>
+                </button>
+              ))}
+            </aside>
+            <AlertsView devices={devices} selectedDeviceId={selectedDeviceId} />
+          </>
+        )}
 
-        <main className="alert-panel">
-          <div className="stat-row">
-            <div className="stat-chip critical">{counts.critical || 0} critical</div>
-            <div className="stat-chip high">{counts.high || 0} high</div>
-            <div className="stat-chip medium">{counts.medium || 0} medium</div>
-          </div>
-
-          {error && (
-            <div className="banner-error">
-              Couldn't reach the server just now — this happens if the backend was
-              asleep (free-tier spin-down) and is waking back up. Retrying automatically.
-            </div>
-          )}
-
-          {sortedAlerts.length === 0 && !error && (
-            <div className="empty-note">No alerts yet for this device.</div>
-          )}
-
-          <div className="alert-list">
-            {sortedAlerts.map((a) => (
-              <div key={a.id} className={`alert-card sev-${a.severity || "info"}`}>
-                <div className="alert-top">
-                  <span className={`sev-badge sev-${a.severity || "info"}`}>
-                    {severityLabel(a.severity)}
-                  </span>
-                  <span className="alert-type">{a.type.replaceAll("_", " ")}</span>
-                  <span className="alert-time">{timeAgo(a.created_at)}</span>
-                </div>
-                <div className="alert-detail">{a.detail.raw}</div>
-              </div>
-            ))}
-          </div>
-        </main>
+        {view === "logs" && (
+          <main className="alert-panel logs-panel">
+            <Logs />
+          </main>
+        )}
       </div>
     </div>
   );
